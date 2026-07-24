@@ -11,6 +11,12 @@ rentalRoute.post(
   rentalController.createNewRentRequest,
 );
 
+rentalRoute.patch(
+  "/requests/update/:id",
+  auth([UserRole.LANDLORD, UserRole.ADMIN]),
+  rentalController.requestStatusUpdate,
+);
+
 rentalRoute.get("/requests/all", rentalController.getAllRentalRequest);
 
 export default rentalRoute;

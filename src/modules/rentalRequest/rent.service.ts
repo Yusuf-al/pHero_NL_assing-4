@@ -1,4 +1,8 @@
-import { Prisma, UserRole } from "../../../generated/prisma/client";
+import {
+  Prisma,
+  RequestStatus,
+  UserRole,
+} from "../../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
 import { IUserPayload } from "../users/users.interface";
 
@@ -138,7 +142,46 @@ const allRentalRequest = async () => {
   return allRequest;
 };
 
+const updateRequestStatus = async (
+  requestId: string,
+  status: RequestStatus,
+  userData: IUserPayload,
+) => {
+  const request = await prisma.rentalRequest.findUniqueOrThrow({
+    where: {
+      id: requestId,
+    },
+    include: {
+      property: {
+        select: {
+          landlordId: true,
+        },
+      },
+    },
+  });
+
+  // Only landlord who owns the property or admin can update
+  if (
+    request.property.landlordId !== userData.id &&
+    userData.role !== UserRole.ADMIN
+  ) {
+    throw new Error("You are not authorized to update this rental request.");
+  }
+
+  const updatedRequest = await prisma.rentalRequest.update({
+    where: {
+      id: requestId,
+    },
+    data: {
+      status,
+    },
+  });
+
+  return updatedRequest;
+};
+
 export const rentalService = {
   newRentRequset,
   allRentalRequest,
+  updateRequestStatus,
 };
