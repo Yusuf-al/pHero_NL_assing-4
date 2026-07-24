@@ -2,7 +2,7 @@ model Review {
   id          String @id @default(cuid())
 
   rating      Int
-  comment     String?
+  comment     String? @db.Text
 
 
   tenantId    String

@@ -3,6 +3,8 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import userRoutes from "./modules/users/users.route";
 import authRoutes from "./modules/auth/auth.route";
+import propertiesRoute from "./modules/properties/properties.route";
+import categoryRoute from "./modules/categories/category.route";
 
 const app: Application = express();
 
@@ -19,5 +21,7 @@ app.get("/", async (req: Request, res: Response) => {
 
 app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/properties", propertiesRoute);
+app.use("/api/categories", categoryRoute);
 
 export default app;

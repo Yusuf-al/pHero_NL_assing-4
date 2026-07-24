@@ -7,9 +7,9 @@ model User {
 
   role            UserRole    @default(TENANT)
 
-  phone           String?
-  profileImage    String?
-  address         String?
+  phone           String?     @db.Text
+  profileImage    String?     @db.Text
+  address         String?     @db.Text
 
   isActive        UserStatus @default(ACTIVE)
 

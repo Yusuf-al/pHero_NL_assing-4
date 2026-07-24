@@ -1,14 +1,14 @@
 model Property {
   id              String   @id @default(cuid())
 
-  title           String
-  description     String
+  title           String  @db.Text
+  description     String  @db.Text
 
   rent            Float
 
-  address         String
-  city            String
-  area            String?
+  address         String  @db.Text
+  city            String  @db.Text
+  area            String? @db.Text
 
   bedrooms        Int
   bathrooms       Int
@@ -16,8 +16,8 @@ model Property {
   status          PropertyStatus @default(AVAILABLE)
 
 
-  categoryId      String
-  category        Category @relation(fields: [categoryId], references: [id])
+  categoryId      String? 
+  category        Category? @relation(fields: [categoryId], references: [id])
 
 
   landlordId      String

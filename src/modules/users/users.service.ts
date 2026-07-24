@@ -4,23 +4,11 @@ import { prisma } from "../../lib/prisma";
 import { jwtUtils } from "../../utils/jwt";
 import jwt from "jsonwebtoken";
 import { UserRole } from "../../../generated/prisma/client";
-
-interface IPayload {
-  id: string;
-  name: string;
-  email: string;
-  password: string;
-}
-
-interface IUserPayload {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-}
+import { IPayload, IUserPayload } from "./users.interface";
 
 const createUser = async (payload: IPayload) => {
-  const { id, name, email, password } = payload;
+  const { id, name, email, password, phone, profileImage, address, role } =
+    payload;
 
   const isUserExist = await prisma.user.findUnique({
     where: {
@@ -41,6 +29,10 @@ const createUser = async (payload: IPayload) => {
       name,
       email,
       password: hashedPassword,
+      phone,
+      profileImage,
+      role,
+      address,
     },
   });
 
@@ -74,6 +66,18 @@ const getUserProfile = async (payload: IUserPayload) => {
   return userFormatedData;
 };
 
+const UserProfile = async (payload: string) => {
+  const id = payload;
+
+  const userProfile = await prisma.user.findUnique({
+    where: { id },
+  });
+
+  if (!userProfile) throw new Error("User not found");
+
+  return userProfile;
+};
+
 const updateUserProfile = async (userdata: IUserPayload, payload: any) => {
   const { email, name } = payload;
   const { id: userId, email: userEmail } = userdata;
@@ -100,4 +104,5 @@ export const userService = {
   createUser,
   getUserProfile,
   updateUserProfile,
+  UserProfile,
 };

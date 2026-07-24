@@ -28,6 +28,20 @@ const getMyProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getProfile = catchAsync(async (req: Request, res: Response) => {
+  const id = req.params.id;
+
+  if (!id) throw new Error("User not found");
+
+  const myProfile = await userService.UserProfile(id as string);
+  sendRespone(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "User Information ",
+    data: myProfile,
+  });
+});
+
 const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
   const userData = req.user;
 
@@ -46,5 +60,6 @@ const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
 export const userController = {
   createUserIntoDB,
   getMyProfile,
+  getProfile,
   updateMyProfile,
 };
