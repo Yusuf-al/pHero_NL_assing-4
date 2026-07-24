@@ -3,7 +3,6 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import userRoutes from "./modules/users/users.route";
 import authRoutes from "./modules/auth/auth.route";
-import contactRoutes from "./modules/contacts/contacts.route";
 
 const app: Application = express();
 
@@ -19,7 +18,6 @@ app.get("/", async (req: Request, res: Response) => {
 });
 
 app.use("/api/user", userRoutes);
-app.use("/api/contacts", contactRoutes);
 app.use("/api/auth", authRoutes);
 
 export default app;

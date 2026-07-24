@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import { userController } from "./users.controller";
 
-import { Role } from "../../../generated/prisma/enums";
+import { UserRole } from "../../../generated/prisma/enums";
 
 import { auth } from "../../middleware/auth";
 
@@ -15,7 +15,7 @@ declare global {
         email: string;
         name: string;
         id: string;
-        role: Role;
+        role: UserRole;
       };
     }
   }
@@ -24,12 +24,12 @@ declare global {
 userRoutes.post("/register", userController.createUserIntoDB);
 userRoutes.get(
   "/me",
-  auth([Role.ADMIN, Role.USER]),
+  auth([UserRole.ADMIN, UserRole.LANDLORD, UserRole.TENANT]),
   userController.getMyProfile,
 );
 userRoutes.put(
   "/my-profile",
-  auth([Role.ADMIN, Role.USER]),
+  auth([UserRole.ADMIN, UserRole.LANDLORD, UserRole.TENANT]),
   userController.updateMyProfile,
 );
 

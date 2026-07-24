@@ -1,0 +1,18 @@
+model User {
+  id          String    @id @default(cuid())
+
+  name        String  
+  email       String    @unique
+  password    String
+
+  role        UserRole  @default(TENANT)
+
+  isActive    UserStatus @default(ACTIVE)
+
+  profile     Profile?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("users")
+}

@@ -3,10 +3,10 @@ import { catchAsync } from "../utils/catchAsync";
 import { jwtUtils } from "../utils/jwt";
 import config from "../config";
 import { sendRespone } from "../utils/sendResponse";
-import { Active_Status, Role } from "../../generated/prisma/enums";
+import { UserStatus, UserRole } from "../../generated/prisma/enums";
 import { prisma } from "../lib/prisma";
 
-export const auth = (roles: Role[] = []) => {
+export const auth = (roles: UserRole[] = []) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const accessToken =
       req.cookies?.accessToken ||
@@ -43,7 +43,7 @@ export const auth = (roles: Role[] = []) => {
 
     if (!user) throw new Error("User not found");
 
-    if (user.isActive === Active_Status.BLOCKED) {
+    if (user.isActive === UserStatus.BLOCKED) {
       throw new Error(
         " Your account has been blocked, Please contact the support",
       );

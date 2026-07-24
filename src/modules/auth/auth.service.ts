@@ -75,7 +75,7 @@ const tokenRefresh = async (token: string) => {
   if (user.isActive === "BLOCKED") throw new Error("user is blocked");
 
   const jwtPayload = {
-    id,
+    id: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
