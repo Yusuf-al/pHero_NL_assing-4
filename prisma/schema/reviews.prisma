@@ -1,13 +1,12 @@
 model Review {
   id          String @id @default(cuid())
 
-
   rating      Int
   comment     String?
 
 
   tenantId    String
-  tenant      Profile @relation("TenantReviews", fields: [tenantId],references: [id], onDelete: Cascade)
+  tenant      User @relation("TenantReviews", fields: [tenantId],references: [id], onDelete: Cascade)
 
 
   propertyId  String

@@ -3,7 +3,7 @@ model RentalRequest {
 
 
   tenantId      String
-  tenant        Profile @relation( "TenantRequests", fields: [tenantId], references: [id],onDelete: Cascade)
+  tenant        User @relation( "TenantRequests", fields: [tenantId], references: [id],onDelete: Cascade)
 
 
   propertyId    String

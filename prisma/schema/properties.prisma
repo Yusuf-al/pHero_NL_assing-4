@@ -21,7 +21,7 @@ model Property {
 
 
   landlordId      String
-  landlord        Profile @relation( "LandlordProperties", fields: [landlordId], references: [id], onDelete: Cascade )
+  landlord        User @relation( "LandlordProperties", fields: [landlordId], references: [id], onDelete: Cascade )
 
 
   rentalRequests  RentalRequest[]

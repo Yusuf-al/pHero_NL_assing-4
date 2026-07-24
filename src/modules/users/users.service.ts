@@ -3,7 +3,7 @@ import config from "../../config";
 import { prisma } from "../../lib/prisma";
 import { jwtUtils } from "../../utils/jwt";
 import jwt from "jsonwebtoken";
-import { Role } from "../../../generated/prisma/client";
+import { UserRole } from "../../../generated/prisma/client";
 
 interface IPayload {
   id: string;
@@ -16,7 +16,7 @@ interface IUserPayload {
   id: string;
   name: string;
   email: string;
-  role: Role;
+  role: UserRole;
 }
 
 const createUser = async (payload: IPayload) => {

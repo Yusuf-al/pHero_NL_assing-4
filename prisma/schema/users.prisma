@@ -1,18 +1,27 @@
 model User {
-  id          String    @id @default(cuid())
+  id              String      @id @default(cuid())
 
-  name        String  
-  email       String    @unique
-  password    String
+  name            String
+  email           String      @unique
+  password        String
 
-  role        UserRole  @default(TENANT)
+  role            UserRole    @default(TENANT)
 
-  isActive    UserStatus @default(ACTIVE)
+  phone           String?
+  profileImage    String?
+  address         String?
 
-  profile     Profile?
+  isActive        UserStatus @default(ACTIVE)
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  // Landlord relation
+  properties      Property[]  @relation("LandlordProperties")
+
+  // Tenant relations
+  rentalRequests  RentalRequest[] @relation("TenantRequests")
+  reviews         Review[]        @relation("TenantReviews")
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
   @@map("users")
 }

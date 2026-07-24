@@ -22,20 +22,6 @@ CREATE TABLE "categories" (
 );
 
 -- CreateTable
-CREATE TABLE "profiles" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "phone" TEXT,
-    "profileImage" TEXT,
-    "address" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "profiles_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "properties" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
@@ -90,7 +76,10 @@ CREATE TABLE "users" (
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "role" "UserRole" NOT NULL DEFAULT 'TENANT',
-    "isActive" "UserStatus" NOT NULL,
+    "phone" TEXT,
+    "profileImage" TEXT,
+    "address" TEXT,
+    "isActive" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -99,9 +88,6 @@ CREATE TABLE "users" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "categories_name_key" ON "categories"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "profiles_userId_key" ON "profiles"("userId");
 
 -- CreateIndex
 CREATE INDEX "properties_city_idx" ON "properties"("city");
@@ -125,22 +111,19 @@ CREATE UNIQUE INDEX "reviews_tenantId_propertyId_key" ON "reviews"("tenantId", "
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- AddForeignKey
-ALTER TABLE "profiles" ADD CONSTRAINT "profiles_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "properties" ADD CONSTRAINT "properties_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "properties" ADD CONSTRAINT "properties_landlordId_fkey" FOREIGN KEY ("landlordId") REFERENCES "profiles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "properties" ADD CONSTRAINT "properties_landlordId_fkey" FOREIGN KEY ("landlordId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "rental_requests" ADD CONSTRAINT "rental_requests_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "profiles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "rental_requests" ADD CONSTRAINT "rental_requests_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "rental_requests" ADD CONSTRAINT "rental_requests_propertyId_fkey" FOREIGN KEY ("propertyId") REFERENCES "properties"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "reviews" ADD CONSTRAINT "reviews_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "profiles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "reviews" ADD CONSTRAINT "reviews_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "reviews" ADD CONSTRAINT "reviews_propertyId_fkey" FOREIGN KEY ("propertyId") REFERENCES "properties"("id") ON DELETE CASCADE ON UPDATE CASCADE;
