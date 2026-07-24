@@ -1,39 +1,53 @@
+import { Prisma, UserRole } from "../../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
+import { IUserPayload } from "../users/users.interface";
 
-const createProperty = async (payload: any, userId: string) => {
-  const {
-    title,
-    description,
-    rent,
-    address,
-    city,
-    area,
-    bedrooms,
-    bathrooms,
-    status,
-  } = payload;
+const createProperty = async (
+  payload: Prisma.PropertyCreateInput,
+  userId: string,
+) => {
+  const user = await prisma.user.findUniqueOrThrow({
+    where: {
+      id: userId,
+    },
+    select: {
+      id: true,
+      role: true,
+    },
+  });
 
-  const landlordId = userId;
+  // Only LANDLORD and ADMIN can create properties
+  if (user.role !== UserRole.LANDLORD && user.role !== UserRole.ADMIN) {
+    throw new Error("Only landlords and admins can create properties.");
+  }
 
   const categoryId = "cmryy6ooj0000zgk61uzd1ret";
 
   const property = await prisma.property.create({
     data: {
-      title,
-      description,
-      rent: Number(rent),
-      address,
-      city,
-      area,
-      bedrooms: Number(bedrooms),
-      bathrooms: Number(bathrooms),
-      status,
-      landlordId,
-      categoryId,
+      title: payload.title,
+      description: payload.description,
+      rent: Number(payload.rent),
+      address: payload.address,
+      city: payload.city,
+      area: payload.area,
+      bedrooms: Number(payload.bedrooms),
+      bathrooms: Number(payload.bathrooms),
+      status: payload.status,
+
+      landlord: {
+        connect: {
+          id: user.id,
+        },
+      },
+
+      category: {
+        connect: {
+          id: categoryId,
+        },
+      },
     },
   });
-
-  if (!property) throw new Error("Failed to create new Property");
 
   return property;
 };
@@ -67,7 +81,104 @@ const allProperties = async () => {
   return result;
 };
 
+const updateProperty = async (
+  payload: Prisma.PropertyUpdateInput,
+  userdata: IUserPayload,
+  propertyId: string,
+) => {
+  const {
+    title,
+    description,
+    rent,
+    address,
+    city,
+    area,
+    bedrooms,
+    bathrooms,
+    status,
+  } = payload;
+
+  const propertyData = await prisma.property.findUniqueOrThrow({
+    where: {
+      id: propertyId,
+    },
+  });
+
+  if (!propertyData) throw new Error("Property not found ");
+
+  if (
+    propertyData.landlordId !== userdata.id &&
+    userdata.role !== UserRole.ADMIN
+  ) {
+    throw new Error("You are not authorized to update this property.");
+  }
+
+  const updatedProperty = await prisma.property.update({
+    where: {
+      id: propertyId,
+    },
+    data: {
+      title,
+      description,
+      rent,
+      address,
+      city,
+      area,
+      bedrooms,
+      bathrooms,
+      status,
+    },
+  });
+
+  if (!updatedProperty) throw new Error("Failed to updated property");
+
+  return updatedProperty;
+};
+
+const deleteProperty = async (propertyId: string, userData: IUserPayload) => {
+  const property = await prisma.property.findUniqueOrThrow({
+    where: {
+      id: propertyId,
+    },
+    select: {
+      landlordId: true,
+    },
+  });
+
+  // Only owner or admin can delete
+  if (property.landlordId !== userData.id && userData.role !== UserRole.ADMIN) {
+    throw new Error("You are not authorized to delete this property.");
+  }
+
+  const deletedProperty = await prisma.property.delete({
+    where: {
+      id: propertyId,
+    },
+  });
+
+  return deletedProperty;
+};
+
+const getUserRentalRequest = async (userData: IUserPayload) => {
+  const userRentReqest = await prisma.rentalRequest.findMany({
+    where: {
+      property: {
+        landlordId: userData.id,
+      },
+    },
+  });
+
+  if (userRentReqest.length === 0) {
+    return "You have not rent reqest";
+  }
+
+  return userRentReqest;
+};
+
 export const propertiesServices = {
   createProperty,
   allProperties,
+  updateProperty,
+  deleteProperty,
+  getUserRentalRequest,
 };

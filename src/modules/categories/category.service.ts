@@ -15,6 +15,15 @@ const newCategory = async (payload: any) => {
   return newCategory;
 };
 
+const allCategories = async () => {
+  const categoriesList = await prisma.category.findMany();
+
+  if (!categoriesList) throw new Error("Failed to collect all categories");
+
+  return categoriesList;
+};
+
 export const categoryServices = {
   newCategory,
+  allCategories,
 };
