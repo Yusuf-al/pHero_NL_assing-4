@@ -5,6 +5,7 @@ import config from "../config";
 import { sendRespone } from "../utils/sendResponse";
 import { UserStatus, UserRole } from "../../generated/prisma/enums";
 import { prisma } from "../lib/prisma";
+import AppError from "../errors/AppError";
 
 export const auth = (roles: UserRole[] = []) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -12,25 +13,25 @@ export const auth = (roles: UserRole[] = []) => {
       req.cookies?.accessToken ||
       (req.headers.authorization?.startsWith("Bearer ")
         ? req.headers.authorization.split(" ")[1]
-        : req.headers.authorization);
+        : undefined);
 
-    if (!accessToken)
-      throw new Error("You are not logged in. Please login to access");
+    if (!accessToken) {
+      throw AppError.unauthorized(
+        "You are not logged in. Please login to access.",
+      );
+    }
 
     const { success, token } = jwtUtils.verifyToken(
       accessToken,
       config.jwt_access_secret,
     );
-    if (!success || !token) throw new Error();
+    if (!success || !token) {
+      throw AppError.unauthorized(
+        "Invalid or expired access token. Please login again.",
+      );
+    }
 
     const { email, role, id, name } = token;
-
-    if (roles.length && !roles.includes(role))
-      return sendRespone(res, {
-        success: false,
-        statusCode: 403,
-        message: "Access forbidden",
-      });
 
     const user = await prisma.user.findUnique({
       where: {
@@ -41,12 +42,18 @@ export const auth = (roles: UserRole[] = []) => {
       },
     });
 
-    if (!user) throw new Error("User not found");
+    if (!user) {
+      throw AppError.unauthorized("User not found. Please login again.");
+    }
 
     if (user.isActive === UserStatus.BLOCKED) {
-      throw new Error(
-        " Your account has been blocked, Please contact the support",
+      throw AppError.forbidden(
+        "Your account has been blocked. Please contact support.",
       );
+    }
+
+    if (roles.length && !roles.includes(user.role)) {
+      throw AppError.forbidden("Access forbidden: insufficient permissions.");
     }
 
     req.user = {

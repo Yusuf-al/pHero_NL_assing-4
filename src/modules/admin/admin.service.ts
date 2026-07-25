@@ -1,4 +1,5 @@
 import { UserStatus } from "../../../generated/prisma/client";
+import AppError from "../../errors/AppError";
 import { prisma } from "../../lib/prisma";
 
 const allUser = async () => {
@@ -12,10 +13,13 @@ const allUser = async () => {
       address: true,
       isActive: true,
     },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
 
   if (users.length === 0) {
-    throw new Error("No Users are found");
+    throw AppError.notFound("No Users are found");
   }
 
   return users;
