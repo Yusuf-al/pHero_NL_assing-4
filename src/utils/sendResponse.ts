@@ -12,6 +12,7 @@ type TRespone<T> = {
   data?: T;
   error?: string;
   meta?: TMeta;
+  path?: string;
 };
 
 export const sendRespone = <T>(res: Response, data: TRespone<T>) => {

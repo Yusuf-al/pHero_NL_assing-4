@@ -1,4 +1,10 @@
-import express, { Application, Request, Response } from "express";
+import express, {
+  Application,
+  NextFunction,
+  Request,
+  response,
+  Response,
+} from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import userRoutes from "./modules/users/users.route";
@@ -8,6 +14,9 @@ import categoryRoute from "./modules/categories/category.route";
 import rentalRoute from "./modules/rentalRequest/rent.route";
 import adminRoute from "./modules/admin/admin.route";
 import reviewRoute from "./modules/reviews/review.route";
+import { sendRespone } from "./utils/sendResponse";
+import httpStatus from "http-status";
+import { globalErrorHandler } from "./middleware/globalErrorHandler";
 
 const app: Application = express();
 
@@ -29,5 +38,16 @@ app.use("/api/categories", categoryRoute);
 app.use("/api/rent", rentalRoute);
 app.use("/api/admin", adminRoute);
 app.use("/api/review", reviewRoute);
+
+app.use((req: Request, res: Response) => {
+  sendRespone(res, {
+    statusCode: 404,
+    success: false,
+    message: "Route not found",
+    path: req.originalUrl,
+  });
+});
+
+app.use(globalErrorHandler);
 
 export default app;

@@ -241,7 +241,28 @@ const getUserRentalRequest = async (userData: IUserPayload) => {
         landlordId: userData.id,
       },
     },
+    include: {
+      property: {
+        select: {
+          id: true,
+          title: true,
+          city: true,
+          area: true,
+          rent: true,
+        },
+      },
+      tenant: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+        },
+      },
+    },
     omit: {
+      tenantId: true,
+      propertyId: true,
       createdAt: true,
       updatedAt: true,
     },

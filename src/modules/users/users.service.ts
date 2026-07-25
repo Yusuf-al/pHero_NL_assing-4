@@ -5,6 +5,7 @@ import { jwtUtils } from "../../utils/jwt";
 import jwt from "jsonwebtoken";
 import { UserRole } from "../../../generated/prisma/client";
 import { IPayload, IUserPayload } from "./users.interface";
+import AppError from "../../errors/AppError";
 
 const createUser = async (payload: IPayload) => {
   const { id, name, email, password, phone, profileImage, address, role } =
@@ -17,7 +18,8 @@ const createUser = async (payload: IPayload) => {
     },
   });
 
-  if (isUserExist) throw new Error("User with this email already exist");
+  if (isUserExist)
+    throw AppError.conflict("User with this email already exist");
 
   const hashedPassword = await bcrypt.hash(
     password,
@@ -90,7 +92,7 @@ const getUserProfile = async (payload: IUserPayload) => {
     },
   });
 
-  if (!userProfile) throw new Error("User not found (service)");
+  if (!userProfile) throw AppError.notFound("User not found ");
 
   const userFormatedData = {
     name: userProfile.name,
@@ -107,7 +109,7 @@ const UserProfile = async (payload: string) => {
     where: { id },
   });
 
-  if (!userProfile) throw new Error("User not found");
+  if (!userProfile) throw AppError.notFound("User not found");
 
   return userProfile;
 };
@@ -129,7 +131,7 @@ const updateUserProfile = async (userdata: IUserPayload, payload: any) => {
     },
   });
 
-  if (!updateProfile) throw new Error("user not found");
+  if (!updateProfile) throw AppError.notFound("User not found");
 
   return updateProfile;
 };

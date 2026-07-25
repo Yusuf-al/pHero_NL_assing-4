@@ -5,6 +5,7 @@ import { IUserPayload } from "../users/users.interface";
 import httpStatus from "http-status";
 import { sendRespone } from "../../utils/sendResponse";
 import { RequestStatus } from "../../../generated/prisma/client";
+import { IRentalRequestQuery } from "./rent.interface";
 
 const createNewRentRequest = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -29,7 +30,9 @@ const createNewRentRequest = catchAsync(
 
 const getAllRentalRequest = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const result = await rentalService.allRentalRequest();
+    const result = await rentalService.allRentalRequest(
+      req.query as IRentalRequestQuery,
+    );
     sendRespone(res, {
       statusCode: httpStatus.OK,
       success: true,
