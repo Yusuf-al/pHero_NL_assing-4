@@ -5,7 +5,7 @@ import { UserRole } from "../../../generated/prisma/client";
 
 const propertiesRoute = Router();
 
-propertiesRoute.post("/create", propertiesController.createPropertyIntoDB);
+// propertiesRoute.post("/create", propertiesController.createPropertyIntoDB);
 propertiesRoute.post(
   "/landlord/create",
   auth([UserRole.LANDLORD, UserRole.ADMIN]),

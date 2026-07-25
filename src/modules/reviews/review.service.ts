@@ -1,4 +1,5 @@
 import { Prisma, RequestStatus } from "../../../generated/prisma/client";
+import AppError from "../../errors/AppError";
 import { prisma } from "../../lib/prisma";
 import { IReview } from "./review.interface";
 
@@ -7,6 +8,9 @@ const submitReview = async (
   propertyId: string,
   review: IReview,
 ) => {
+  if (review.rating < 1 || review.rating > 5) {
+    throw AppError.badRequest("Rating must be between 1 and 5.");
+  }
   // Verify the user has an approved rental request
   const rentalRequest = await prisma.rentalRequest.findFirst({
     where: {
@@ -20,7 +24,9 @@ const submitReview = async (
   });
 
   if (!rentalRequest) {
-    throw new Error("Not allow to submit a review");
+    throw AppError.forbidden(
+      "You are not allowed to review this property. Only tenants with an approved rental request can leave a review.",
+    );
   }
 
   // Prevent duplicate reviews
@@ -35,11 +41,7 @@ const submitReview = async (
   });
 
   if (existingReview) {
-    throw new Error("You have already reviewed this property.");
-  }
-
-  if (review.rating < 1 || review.rating > 5) {
-    throw new Error("Rating must be between 1 and 5.");
+    throw AppError.conflict("You have already reviewed this property.");
   }
 
   // Create the review

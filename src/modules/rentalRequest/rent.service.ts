@@ -3,6 +3,7 @@ import {
   RequestStatus,
   UserRole,
 } from "../../../generated/prisma/client";
+import AppError from "../../errors/AppError";
 import { prisma } from "../../lib/prisma";
 import { IUserPayload } from "../users/users.interface";
 
@@ -23,7 +24,7 @@ const newRentRequset = async (
 
   // Only tenants can request
   if (userData.role !== UserRole.TENANT) {
-    throw new Error("Only tenants can request rental.");
+    throw AppError.forbidden("Only tenants can request rental.");
   }
 
   const moveInDate = new Date(payload.moveInDate as Date);
@@ -31,7 +32,11 @@ const newRentRequset = async (
 
   // Validate dates
   if (moveInDate >= moveOutDate) {
-    throw new Error("Move-in date should be before move-out date.");
+    throw AppError.badRequest("Move-in date should be before move-out date.");
+  }
+
+  if (moveInDate < new Date()) {
+    throw AppError.badRequest("Move-in date cannot be in the past.");
   }
 
   // Check property availability
@@ -41,7 +46,7 @@ const newRentRequset = async (
 
       // only check confirmed/approved rentals
       status: {
-        in: ["APPROVED"],
+        in: [RequestStatus.APPROVED],
       },
 
       AND: [
@@ -60,7 +65,9 @@ const newRentRequset = async (
   });
 
   if (existingBooking) {
-    throw new Error("Property is not available for the selected dates.");
+    throw AppError.conflict(
+      "Property is not available for the selected dates.",
+    );
   }
 
   // Prevent duplicate request by same tenant
@@ -68,12 +75,12 @@ const newRentRequset = async (
     where: {
       tenantId: userData.id,
       propertyId,
-      status: "PENDING",
+      status: RequestStatus.PENDING,
     },
   });
 
   if (existingRequest) {
-    throw new Error("You already requested this property.");
+    throw AppError.conflict("You already requested this property.");
   }
 
   // Create rental request
@@ -136,7 +143,7 @@ const allRentalRequest = async () => {
   });
 
   if (allRequest.length === 0) {
-    throw new Error("No rental requests found");
+    return "No rental requests found";
   }
 
   return allRequest;
@@ -165,7 +172,15 @@ const updateRequestStatus = async (
     request.property.landlordId !== userData.id &&
     userData.role !== UserRole.ADMIN
   ) {
-    throw new Error("You are not authorized to update this rental request.");
+    throw AppError.forbidden(
+      "You are not authorized to update this rental request.",
+    );
+  }
+
+  if (request.status !== RequestStatus.PENDING) {
+    throw AppError.badRequest(
+      `This request has already been ${request.status.toLowerCase()} and cannot be updated again.`,
+    );
   }
 
   const updatedRequest = await prisma.rentalRequest.update({
