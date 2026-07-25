@@ -166,6 +166,10 @@ const getUserRentalRequest = async (userData: IUserPayload) => {
         landlordId: userData.id,
       },
     },
+    omit: {
+      createdAt: true,
+      updatedAt: true,
+    },
   });
 
   if (userRentReqest.length === 0) {

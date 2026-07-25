@@ -16,7 +16,13 @@ const newCategory = async (payload: any) => {
 };
 
 const allCategories = async () => {
-  const categoriesList = await prisma.category.findMany();
+  const categoriesList = await prisma.category.findMany({
+    select: {
+      id: true,
+      name: true,
+      description: true,
+    },
+  });
 
   if (!categoriesList) throw new Error("Failed to collect all categories");
 

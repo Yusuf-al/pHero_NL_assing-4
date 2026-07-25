@@ -22,12 +22,13 @@ declare global {
 }
 
 userRoutes.post("/register", userController.createUserIntoDB);
-userRoutes.get("/:id", userController.getProfile);
+// userRoutes.get("/:id", userController.getProfile);
 userRoutes.get(
   "/me",
   auth([UserRole.ADMIN, UserRole.LANDLORD, UserRole.TENANT]),
   userController.getMyProfile,
 );
+
 userRoutes.put(
   "/my-profile",
   auth([UserRole.ADMIN, UserRole.LANDLORD, UserRole.TENANT]),

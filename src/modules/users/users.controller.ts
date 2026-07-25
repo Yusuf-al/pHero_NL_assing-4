@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import httpStatus from "http-status";
 import { userService } from "./users.service";
 import { catchAsync } from "../../utils/catchAsync";
@@ -14,19 +14,22 @@ const createUserIntoDB = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getMyProfile = catchAsync(async (req: Request, res: Response) => {
-  const userData = req.user;
+const getMyProfile = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userData = req.user;
+    console.log(req.user);
 
-  if (!userData) throw new Error("User not found");
+    if (!userData) throw new Error("User not found (controller)");
 
-  const myProfile = await userService.getUserProfile(userData);
-  sendRespone(res, {
-    success: true,
-    statusCode: httpStatus.OK,
-    message: "User Information ",
-    data: myProfile,
-  });
-});
+    const myProfile = await userService.getUserProfile(userData);
+    sendRespone(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "User Information ",
+      data: myProfile,
+    });
+  },
+);
 
 const getProfile = catchAsync(async (req: Request, res: Response) => {
   const id = req.params.id;

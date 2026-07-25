@@ -24,7 +24,7 @@ const getAllCategoriesFromDB = catchAsync(
     const result = await categoryServices.allCategories();
 
     sendRespone(res, {
-      statusCode: httpStatus.CREATED,
+      statusCode: httpStatus.OK,
       success: true,
       message: "All categories",
       data: result,
