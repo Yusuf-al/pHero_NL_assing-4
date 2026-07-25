@@ -17,6 +17,10 @@ rentalRoute.patch(
   rentalController.requestStatusUpdate,
 );
 
-rentalRoute.get("/requests/all", rentalController.getAllRentalRequest);
+rentalRoute.get(
+  "/requests/all",
+  auth([UserRole.ADMIN]),
+  rentalController.getAllRentalRequest,
+);
 
 export default rentalRoute;
