@@ -3,11 +3,8 @@ import config from "../../config";
 import { prisma } from "../../lib/prisma";
 import jwt, { JwtPayload, SignOptions } from "jsonwebtoken";
 import { jwtUtils } from "../../utils/jwt";
-
-interface Ilogin {
-  email: string;
-  password: string;
-}
+import { Ilogin } from "./auth.interface";
+import AppError from "../../errors/AppError";
 
 export interface IJwtpayload {
   id: string;
@@ -15,7 +12,6 @@ export interface IJwtpayload {
   email: string;
   role: string;
 }
-
 const loginUserService = async (payload: Ilogin) => {
   const { email, password } = payload;
 
@@ -25,10 +21,16 @@ const loginUserService = async (payload: Ilogin) => {
     },
   });
 
-  if (!user) throw new Error("User is not exist");
+  if (!user) {
+    throw AppError.unauthorized("Invalid email or password");
+  }
 
   const checkPass = bcrypt.compare(password, user?.password as string);
-  if (!checkPass) throw new Error("Invalid credebtials");
+  if (!checkPass) throw AppError.unauthorized("Invalid email or password");
+
+  if (user.isActive === "BLOCKED") {
+    throw AppError.forbidden("Your account has been blocked. Contact support.");
+  }
 
   const jwtPayload: IJwtpayload = {
     id: user.id,
@@ -61,8 +63,11 @@ const tokenRefresh = async (token: string) => {
     config.jwt_refresh_secret,
   );
 
-  if (!refreshTokenData.success || typeof refreshTokenData.token === "string")
-    throw new Error(refreshTokenData.error);
+  if (!refreshTokenData.success || !refreshTokenData.token) {
+    throw AppError.unauthorized(
+      refreshTokenData.error ?? "Invalid refresh token",
+    );
+  }
 
   const { id } = refreshTokenData.token as JwtPayload;
 
@@ -72,7 +77,9 @@ const tokenRefresh = async (token: string) => {
     },
   });
 
-  if (user.isActive === "BLOCKED") throw new Error("user is blocked");
+  if (user.isActive === "BLOCKED") {
+    throw AppError.forbidden("Your account has been blocked. Contact support.");
+  }
 
   const jwtPayload = {
     id: user.id,
