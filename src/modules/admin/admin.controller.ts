@@ -4,10 +4,11 @@ import { adminServices } from "./admin.service";
 import { sendRespone } from "../../utils/sendResponse";
 import httpStatus from "http-status";
 import { UserStatus } from "../../../generated/prisma/client";
+import { IUserQuery } from "./admin.interface";
 
 const allUsersFromDB = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const usersResult = await adminServices.allUser();
+    const usersResult = await adminServices.allUser(req.query as IUserQuery);
 
     sendRespone(res, {
       statusCode: httpStatus.OK,

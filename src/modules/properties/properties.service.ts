@@ -1,7 +1,12 @@
 import { Prisma, UserRole } from "../../../generated/prisma/client";
 import AppError from "../../errors/AppError";
 import { prisma } from "../../lib/prisma";
+import {
+  buildPaginationMeta,
+  calculatePagination,
+} from "../../utils/paginationHelper";
 import { IUserPayload } from "../users/users.interface";
+import { IPropertyQuery } from "./properties.interface";
 
 const createProperty = async (
   payload: Prisma.PropertyCreateInput,
@@ -52,33 +57,103 @@ const createProperty = async (
   return property;
 };
 
-const allProperties = async () => {
-  const result = await prisma.property.findMany({
-    include: {
-      landlord: {
-        select: {
-          name: true,
-          email: true,
-          phone: true,
+const propertySearchableFields: (keyof Prisma.PropertyWhereInput)[] = [
+  "title",
+  "description",
+  "city",
+  "area",
+  "address",
+];
+
+const allProperties = async (query: IPropertyQuery) => {
+  const { searchTerm, city, area, categoryId, status, minRent, maxRent } =
+    query;
+
+  const { page, limit, skip, sortBy, sortOrder } = calculatePagination(query);
+
+  const andConditions: Prisma.PropertyWhereInput[] = [];
+
+  // Free-text search parital match
+
+  if (searchTerm) {
+    andConditions.push({
+      OR: propertySearchableFields.map((field) => ({
+        [field]: {
+          contains: searchTerm,
+          mode: "insensitive",
+        },
+      })),
+    });
+  }
+
+  // Exact-match filters
+  if (city) {
+    andConditions.push({ city: { equals: city, mode: "insensitive" } });
+  }
+
+  if (area) {
+    andConditions.push({ area: { equals: area, mode: "insensitive" } });
+  }
+
+  if (categoryId) {
+    andConditions.push({ categoryId });
+  }
+
+  if (status) {
+    andConditions.push({ status });
+  }
+
+  // Range filters
+  if (minRent !== undefined || maxRent !== undefined) {
+    andConditions.push({
+      rent: {
+        ...(minRent !== undefined && { gte: minRent }),
+        ...(maxRent !== undefined && { lte: maxRent }),
+      },
+    });
+  }
+
+  const whereConditions: Prisma.PropertyWhereInput =
+    andConditions.length > 0 ? { AND: andConditions } : {};
+
+  const [result, total] = await Promise.all([
+    prisma.property.findMany({
+      where: whereConditions,
+      include: {
+        landlord: {
+          select: {
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
+        category: {
+          select: {
+            name: true,
+          },
         },
       },
-      category: {
-        select: {
-          name: true,
-        },
+      omit: {
+        categoryId: true,
+        landlordId: true,
+        createdAt: true,
+        updatedAt: true,
       },
-    },
-    omit: {
-      categoryId: true,
-      landlordId: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
+      skip,
+      take: limit,
+      orderBy: {
+        [sortBy]: sortOrder,
+      },
+    }),
+    prisma.property.count({ where: whereConditions }),
+  ]);
 
   if (!result) throw AppError.notFound("Failed to get all properties");
 
-  return result;
+  return {
+    data: result,
+    meta: buildPaginationMeta(total, { page, limit }),
+  };
 };
 
 const updateProperty = async (

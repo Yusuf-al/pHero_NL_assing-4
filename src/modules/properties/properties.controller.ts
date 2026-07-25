@@ -4,6 +4,7 @@ import { sendRespone } from "../../utils/sendResponse";
 import httpStatus from "http-status";
 import { propertiesServices } from "./properties.service";
 import { IUserPayload } from "../users/users.interface";
+import { IPropertyQuery } from "./properties.interface";
 
 const createPropertyIntoDB = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -26,7 +27,9 @@ const createPropertyIntoDB = catchAsync(
 
 const getAllPropertiesFromDB = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const allProperties = await propertiesServices.allProperties();
+    const allProperties = await propertiesServices.allProperties(
+      req.query as IPropertyQuery,
+    );
     sendRespone(res, {
       statusCode: httpStatus.OK,
       success: true,

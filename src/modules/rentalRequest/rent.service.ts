@@ -5,7 +5,9 @@ import {
 } from "../../../generated/prisma/client";
 import AppError from "../../errors/AppError";
 import { prisma } from "../../lib/prisma";
+import { buildPaginationMeta, calculatePagination } from "../../utils/paginationHelper";
 import { IUserPayload } from "../users/users.interface";
+import { IRentalRequestQuery } from "./rent.interface";
 
 const newRentRequset = async (
   payload: Prisma.RentalRequestCreateInput,
@@ -107,22 +109,62 @@ const newRentRequset = async (
   return rentalRequest;
 };
 
-const allRentalRequest = async () => {
-  const allRequest = await prisma.rentalRequest.findMany({
-    select: {
-      moveInDate: true,
-      moveOutDate: true,
-      status: true,
-      message: true,
+const allRentalRequest = async (query:IRentalRequestQuery) => {
 
-      property: {
+  const {
+    searchTerm,
+    status,
+  } = query;
+
+  const { page, limit, skip, sortBy, sortOrder } = calculatePagination(query);
+
+  const andConditions: Prisma.RentalRequestWhereInput[] = [];
+
+   if (searchTerm) {
+     andConditions.push({
+       property: {
+         OR: [
+           { title: { contains: searchTerm, mode: "insensitive" } },
+           { city: { contains: searchTerm, mode: "insensitive" } },
+         ],
+       },
+     });
+   }
+
+    if (status) {
+      andConditions.push({ status });
+    }
+
+    const whereConditions: Prisma.RentalRequestWhereInput =
+      andConditions.length > 0 ? { AND: andConditions } : {};
+
+    const [data, total] = await Promise.all([
+      prisma.rentalRequest.findMany({
+        where: whereConditions,
         select: {
-          title: true,
+          moveInDate: true,
+          moveOutDate: true,
           status: true,
-          city: true,
-          address: true,
+          message: true,
 
-          landlord: {
+          property: {
+            select: {
+              title: true,
+              status: true,
+              city: true,
+              address: true,
+
+              landlord: {
+                select: {
+                  name: true,
+                  email: true,
+                  phone: true,
+                },
+              },
+            },
+          },
+
+          tenant: {
             select: {
               name: true,
               email: true,
@@ -130,23 +172,19 @@ const allRentalRequest = async () => {
             },
           },
         },
-      },
-
-      tenant: {
-        select: {
-          name: true,
-          email: true,
-          phone: true,
+        skip,
+        take: limit,
+        orderBy: {
+          [sortBy]: sortOrder,
         },
-      },
-    },
-  });
+      }),
+      prisma.rentalRequest.count({ where: whereConditions }),
+    ]);
 
-  if (allRequest.length === 0) {
-    return "No rental requests found";
-  }
-
-  return allRequest;
+    return {
+      data,
+      meta: buildPaginationMeta(total, { page, limit }),
+    };
 };
 
 const updateRequestStatus = async (
