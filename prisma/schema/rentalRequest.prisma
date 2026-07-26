@@ -10,9 +10,10 @@ model RentalRequest {
   property      Property @relation(fields: [propertyId],references: [id],onDelete: Cascade)
 
 
-  moveInDate    DateTime?
-  moveOutDate   DateTime?
+  moveInDate    DateTime
+  moveOutDate   DateTime
 
+  totalPrice    Float     @db.DoublePrecision
   message       String?
 
   status        RequestStatus @default(PENDING)

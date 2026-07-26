@@ -13,7 +13,7 @@ const allUsersFromDB = catchAsync(
     sendRespone(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: "All Rental Request",
+      message: "All Users",
       data: usersResult,
     });
   },
