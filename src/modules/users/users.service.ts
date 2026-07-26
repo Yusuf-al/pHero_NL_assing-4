@@ -52,36 +52,35 @@ const createUser = async (payload: IPayload) => {
 };
 
 const getUserProfile = async (payload: IUserPayload) => {
-  const user = payload;
-
   const userProfile = await prisma.user.findUnique({
-    where: { id: user?.id },
+    where: { id: payload.id },
     include: {
-      rentalRequests: {
-        select: {
-          id: true,
-          moveInDate: true,
-          moveOutDate: true,
-          property: {
-            select: {
-              title: true,
-              bedrooms: true,
-              bathrooms: true,
-              city: true,
-              address: true,
-              rent: true,
-            },
-          },
-        },
-      },
       properties: {
         select: {
+          id: true,
           title: true,
           bedrooms: true,
           bathrooms: true,
           city: true,
           address: true,
           rent: true,
+          status: true,
+          rentalRequests: {
+            select: {
+              id: true,
+              moveInDate: true,
+              moveOutDate: true,
+              totalPrice: true,
+              status: true,
+              tenant: {
+                select: {
+                  name: true,
+                  email: true,
+                  phone: true,
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -92,12 +91,7 @@ const getUserProfile = async (payload: IUserPayload) => {
     },
   });
 
-  if (!userProfile) throw AppError.notFound("User not found ");
-
-  const userFormatedData = {
-    name: userProfile.name,
-    email: userProfile.email,
-  };
+  if (!userProfile) throw AppError.notFound("User not found");
 
   return userProfile;
 };
