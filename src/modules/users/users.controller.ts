@@ -3,6 +3,7 @@ import httpStatus from "http-status";
 import { userService } from "./users.service";
 import { catchAsync } from "../../utils/catchAsync";
 import { sendRespone } from "../../utils/sendResponse";
+import AppError from "../../errors/AppError";
 
 const createUserIntoDB = catchAsync(async (req: Request, res: Response) => {
   const user = await userService.createUser(req.body);
@@ -19,7 +20,7 @@ const getMyProfile = catchAsync(
     const userData = req.user;
     console.log(req.user);
 
-    if (!userData) throw new Error("User not found (controller)");
+    if (!userData) throw AppError.notFound("User not found ");
 
     const myProfile = await userService.getUserProfile(userData);
     sendRespone(res, {
@@ -34,7 +35,7 @@ const getMyProfile = catchAsync(
 const getProfile = catchAsync(async (req: Request, res: Response) => {
   const id = req.params.id;
 
-  if (!id) throw new Error("User not found");
+  if (!id) throw AppError.notFound("User not found");
 
   const myProfile = await userService.UserProfile(id as string);
   sendRespone(res, {
@@ -48,7 +49,7 @@ const getProfile = catchAsync(async (req: Request, res: Response) => {
 const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
   const userData = req.user;
 
-  if (!userData) throw new Error("User not found");
+  if (!userData) throw AppError.notFound("User not found");
 
   const updatedData = await userService.updateUserProfile(userData, req.body);
 

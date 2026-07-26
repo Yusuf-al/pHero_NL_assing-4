@@ -16,7 +16,7 @@ const submitReview = async (
     where: {
       tenantId: userId,
       propertyId,
-      status: RequestStatus.APPROVED,
+      status: RequestStatus.COMPLETED,
     },
     select: {
       id: true,
