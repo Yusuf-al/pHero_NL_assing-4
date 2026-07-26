@@ -17,6 +17,9 @@ model RentalRequest {
   message       String?
 
   status        RequestStatus @default(PENDING)
+  isPaid        Boolean       @default(false)
+
+  payments      Payment[]
 
 
   createdAt     DateTime @default(now())

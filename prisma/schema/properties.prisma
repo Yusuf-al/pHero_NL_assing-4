@@ -26,6 +26,7 @@ model Property {
 
   rentalRequests  RentalRequest[]
   reviews         Review[]
+  payments        Payment[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

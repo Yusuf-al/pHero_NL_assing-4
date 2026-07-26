@@ -229,9 +229,33 @@ const updateRequestStatus = async (
     );
   }
 
-  if (request.status !== RequestStatus.PENDING) {
+  // PENDING can move to APPROVED, REJECTED, or CANCELED
+  if (request.status === RequestStatus.PENDING) {
+    const allowed: RequestStatus[] = [
+      RequestStatus.APPROVED,
+      RequestStatus.REJECTED,
+      RequestStatus.CANCELLED,
+    ];
+    if (!allowed.includes(status)) {
+      throw AppError.badRequest(
+        "A pending request can only be approved, rejected, or canceled.",
+      );
+    }
+  }
+
+  // APPROVED can only move to COMPLETED
+  else if (request.status === RequestStatus.APPROVED) {
+    if (status !== RequestStatus.COMPLETED) {
+      throw AppError.badRequest(
+        "An approved request can only be marked as completed.",
+      );
+    }
+  }
+
+  // REJECTED, CANCELED, COMPLETED are final — nothing can change after that
+  else {
     throw AppError.badRequest(
-      `This request has already been ${request.status.toLowerCase()} and cannot be updated again.`,
+      `This request is already "${request.status}" and cannot be changed further.`,
     );
   }
 

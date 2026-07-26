@@ -1,0 +1,45 @@
+model Payment {
+  id              String          @id @default(cuid())
+
+  amount          Float
+
+  status          PaymentStatus   @default(PENDING)
+
+  paymentMethod   PaymentMethod?
+
+  transactionId   String?         @unique
+
+  paymentDate     DateTime?
+
+
+  // Tenant who made payment
+  tenantId        String
+  tenant          User            @relation("TenantPayments", fields: [tenantId], references: [id], onDelete: Cascade)
+
+
+  // Landlord receiving payment
+  landlordId      String
+  landlord        User            @relation("LandlordPayments", fields: [landlordId], references: [id], onDelete: Cascade)
+
+
+  // Related property
+  propertyId      String
+  property        Property        @relation(fields: [propertyId],references: [id], onDelete: Cascade)
+
+
+  // Related rental request
+  rentalRequestId String?
+  rentalRequest   RentalRequest?  @relation( fields: [rentalRequestId], references: [id],onDelete: SetNull)
+
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+
+  @@index([tenantId])
+  @@index([landlordId])
+  @@index([propertyId])
+  @@index([status])
+
+  @@map("payments")
+}

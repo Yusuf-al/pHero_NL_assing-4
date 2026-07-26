@@ -20,6 +20,11 @@ model User {
   rentalRequests  RentalRequest[] @relation("TenantRequests")
   reviews         Review[]        @relation("TenantReviews")
 
+  tenantPayments  Payment[] @relation("TenantPayments")
+
+
+  landlordPayments Payment[] @relation("LandlordPayments")
+
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 

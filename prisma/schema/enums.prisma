@@ -23,3 +23,17 @@ enum UserStatus {
     BLOCKED
     SUSPENDED
 }
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CARD
+  MOBILE_BANKING
+  BANK_TRANSFER
+}
