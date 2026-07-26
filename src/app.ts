@@ -17,6 +17,7 @@ import reviewRoute from "./modules/reviews/review.route";
 import { sendRespone } from "./utils/sendResponse";
 import httpStatus from "http-status";
 import { globalErrorHandler } from "./middleware/globalErrorHandler";
+import paymentRoute from "./modules/payment/payment.route";
 
 const app: Application = express();
 
@@ -38,6 +39,7 @@ app.use("/api/categories", categoryRoute);
 app.use("/api/rent", rentalRoute);
 app.use("/api/admin", adminRoute);
 app.use("/api/review", reviewRoute);
+app.use("/api/payment", paymentRoute);
 
 app.use((req: Request, res: Response) => {
   sendRespone(res, {
