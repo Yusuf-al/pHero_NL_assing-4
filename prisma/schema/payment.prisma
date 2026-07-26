@@ -33,6 +33,8 @@ model Payment {
 
   
   //Stripe Id
+  //Stripe customer id
+  // Stripe payment id
 
    
 
