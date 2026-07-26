@@ -26,9 +26,14 @@ adminRoute.get(
 );
 
 adminRoute.patch(
-  "/update/user/:id",
+  "/update/status/:id",
   auth([UserRole.ADMIN]),
   adminController.updateUserStatusIntoDB,
+);
+adminRoute.patch(
+  "/update/role/:id",
+  auth([UserRole.ADMIN]),
+  adminController.updateUserRoleIntoDB,
 );
 
 export default adminRoute;

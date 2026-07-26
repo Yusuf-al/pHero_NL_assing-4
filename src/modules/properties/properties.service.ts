@@ -26,7 +26,7 @@ const createProperty = async (
     throw AppError.forbidden("Only LANDLORD and ADMIN can create properties");
   }
 
-  const categoryId = "cmryy6ooj0000zgk61uzd1ret";
+  const categoryId = "cms1ekwhz000148k6rrm5dviv";
 
   const property = await prisma.property.create({
     data: {

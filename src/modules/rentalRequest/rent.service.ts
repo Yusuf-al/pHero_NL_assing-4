@@ -1,11 +1,15 @@
 import {
   Prisma,
+  PropertyStatus,
   RequestStatus,
   UserRole,
 } from "../../../generated/prisma/client";
 import AppError from "../../errors/AppError";
 import { prisma } from "../../lib/prisma";
-import { buildPaginationMeta, calculatePagination } from "../../utils/paginationHelper";
+import {
+  buildPaginationMeta,
+  calculatePagination,
+} from "../../utils/paginationHelper";
 import { IUserPayload } from "../users/users.interface";
 import { IRentalRequestQuery } from "./rent.interface";
 
@@ -14,6 +18,10 @@ const newRentRequset = async (
   userData: IUserPayload,
   propertyId: string,
 ) => {
+  if (userData.role !== UserRole.TENANT) {
+    throw AppError.forbidden("Only tenants can request rental.");
+  }
+
   const property = await prisma.property.findUniqueOrThrow({
     where: {
       id: propertyId,
@@ -21,48 +29,43 @@ const newRentRequset = async (
     select: {
       id: true,
       status: true,
+      rent: true,
     },
   });
 
-  // Only tenants can request
-  if (userData.role !== UserRole.TENANT) {
-    throw AppError.forbidden("Only tenants can request rental.");
+  if (property.status !== PropertyStatus.AVAILABLE) {
+    throw AppError.badRequest("This property is not available for rent.");
   }
 
-  const moveInDate = new Date(payload.moveInDate as Date);
-  const moveOutDate = new Date(payload.moveOutDate as Date);
+  const MoveInDate = new Date(payload.moveInDate as Date);
+  const MoveOutDate = new Date(payload.moveOutDate as Date);
 
-  // Validate dates
-  if (moveInDate >= moveOutDate) {
+  if (
+    Number.isNaN(MoveInDate.getTime()) ||
+    Number.isNaN(MoveOutDate.getTime())
+  ) {
+    throw AppError.badRequest("Invalid moveInDate or moveOutDate.");
+  }
+
+  if (MoveInDate >= MoveOutDate) {
     throw AppError.badRequest("Move-in date should be before move-out date.");
   }
 
-  if (moveInDate < new Date()) {
+  if (MoveInDate < new Date()) {
     throw AppError.badRequest("Move-in date cannot be in the past.");
   }
 
-  // Check property availability
+  // Check property availability against existing approved bookings
   const existingBooking = await prisma.rentalRequest.findFirst({
     where: {
       propertyId,
-
-      // only check confirmed/approved rentals
-      status: {
-        in: [RequestStatus.APPROVED],
+      status: RequestStatus.APPROVED,
+      moveInDate: {
+        lt: MoveOutDate,
       },
-
-      AND: [
-        {
-          moveInDate: {
-            lt: moveOutDate,
-          },
-        },
-        {
-          moveOutDate: {
-            gt: moveInDate,
-          },
-        },
-      ],
+      moveOutDate: {
+        gt: MoveInDate,
+      },
     },
   });
 
@@ -72,12 +75,14 @@ const newRentRequset = async (
     );
   }
 
-  // Prevent duplicate request by same tenant
+  // Prevent duplicate request by same tenant and overlap
   const existingRequest = await prisma.rentalRequest.findFirst({
     where: {
       tenantId: userData.id,
       propertyId,
       status: RequestStatus.PENDING,
+      moveInDate: { lt: MoveOutDate },
+      moveOutDate: { gt: MoveInDate },
     },
   });
 
@@ -85,11 +90,18 @@ const newRentRequset = async (
     throw AppError.conflict("You already requested this property.");
   }
 
-  // Create rental request
+  const MS_PER_DAY = 1000 * 60 * 60 * 24;
+  const dayCount = Math.ceil(
+    (MoveOutDate.getTime() - MoveInDate.getTime()) / MS_PER_DAY,
+  );
+
+  const totalCost = property.rent * dayCount;
+
   const rentalRequest = await prisma.rentalRequest.create({
     data: {
-      moveInDate,
-      moveOutDate,
+      moveInDate: MoveInDate,
+      moveOutDate: MoveOutDate,
+      totalPrice: totalCost,
       message: payload.message,
 
       tenant: {
@@ -109,82 +121,84 @@ const newRentRequset = async (
   return rentalRequest;
 };
 
-const allRentalRequest = async (query:IRentalRequestQuery) => {
-
-  const {
-    searchTerm,
-    status,
-  } = query;
+const allRentalRequest = async (query: IRentalRequestQuery) => {
+  const { searchTerm, status } = query;
 
   const { page, limit, skip, sortBy, sortOrder } = calculatePagination(query);
 
   const andConditions: Prisma.RentalRequestWhereInput[] = [];
 
-   if (searchTerm) {
-     andConditions.push({
-       property: {
-         OR: [
-           { title: { contains: searchTerm, mode: "insensitive" } },
-           { city: { contains: searchTerm, mode: "insensitive" } },
-         ],
-       },
-     });
-   }
+  if (searchTerm) {
+    andConditions.push({
+      property: {
+        OR: [
+          { title: { contains: searchTerm, mode: "insensitive" } },
+          { city: { contains: searchTerm, mode: "insensitive" } },
+        ],
+      },
+    });
+  }
 
-    if (status) {
-      andConditions.push({ status });
-    }
+  if (status) {
+    andConditions.push({ status });
+  }
 
-    const whereConditions: Prisma.RentalRequestWhereInput =
-      andConditions.length > 0 ? { AND: andConditions } : {};
+  const whereConditions: Prisma.RentalRequestWhereInput =
+    andConditions.length > 0 ? { AND: andConditions } : {};
 
-    const [data, total] = await Promise.all([
-      prisma.rentalRequest.findMany({
-        where: whereConditions,
-        select: {
-          moveInDate: true,
-          moveOutDate: true,
-          status: true,
-          message: true,
+  const [data, total] = await Promise.all([
+    prisma.rentalRequest.findMany({
+      where: whereConditions,
+      select: {
+        moveInDate: true,
+        moveOutDate: true,
+        status: true,
+        message: true,
 
-          property: {
-            select: {
-              title: true,
-              status: true,
-              city: true,
-              address: true,
+        property: {
+          select: {
+            title: true,
+            status: true,
+            city: true,
+            address: true,
 
-              landlord: {
-                select: {
-                  name: true,
-                  email: true,
-                  phone: true,
-                },
+            landlord: {
+              select: {
+                name: true,
+                email: true,
+                phone: true,
               },
             },
           },
+        },
 
-          tenant: {
-            select: {
-              name: true,
-              email: true,
-              phone: true,
-            },
+        tenant: {
+          select: {
+            name: true,
+            email: true,
+            phone: true,
           },
         },
-        skip,
-        take: limit,
-        orderBy: {
-          [sortBy]: sortOrder,
-        },
-      }),
-      prisma.rentalRequest.count({ where: whereConditions }),
-    ]);
+      },
+      skip,
+      take: limit,
+      orderBy: {
+        [sortBy]: sortOrder,
+      },
+    }),
+    prisma.rentalRequest.count({ where: whereConditions }),
+  ]);
 
+  if (data.length === 0)
     return {
-      data,
+      message: "Rental Request is empty. No request has not submitted yet",
       meta: buildPaginationMeta(total, { page, limit }),
     };
+
+  return {
+    data,
+    meta: buildPaginationMeta(total, { page, limit }),
+  };
 };
 
 const updateRequestStatus = async (

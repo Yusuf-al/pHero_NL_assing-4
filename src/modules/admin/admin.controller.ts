@@ -3,7 +3,7 @@ import { catchAsync } from "../../utils/catchAsync";
 import { adminServices } from "./admin.service";
 import { sendRespone } from "../../utils/sendResponse";
 import httpStatus from "http-status";
-import { UserStatus } from "../../../generated/prisma/client";
+import { UserRole, UserStatus } from "../../../generated/prisma/client";
 import { IUserQuery } from "./admin.interface";
 
 const allUsersFromDB = catchAsync(
@@ -38,7 +38,28 @@ const updateUserStatusIntoDB = catchAsync(
   },
 );
 
+const updateUserRoleIntoDB = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const adminId = req.user?.id;
+    const { role } = req.body;
+    const userId = req.params.id;
+    const result = await adminServices.updateUserRole(
+      adminId as string,
+      role as UserRole,
+      userId as string,
+    );
+
+    sendRespone(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "User role updated successfully",
+      data: result,
+    });
+  },
+);
+
 export const adminController = {
   allUsersFromDB,
   updateUserStatusIntoDB,
+  updateUserRoleIntoDB,
 };

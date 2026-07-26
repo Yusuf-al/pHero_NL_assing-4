@@ -1,4 +1,4 @@
-import { Prisma, UserStatus } from "../../../generated/prisma/client";
+import { Prisma, UserRole, UserStatus } from "../../../generated/prisma/client";
 import AppError from "../../errors/AppError";
 import { prisma } from "../../lib/prisma";
 import {
@@ -89,7 +89,41 @@ const updateUserStatus = async (status: UserStatus, userId: string) => {
   return updatedStatus;
 };
 
+const updateUserRole = async (
+  adminId: string,
+  newRole: UserRole,
+  userId: string,
+) => {
+  const admin = await prisma.user.findUniqueOrThrow({
+    where: {
+      id: adminId,
+      role: UserRole.ADMIN,
+    },
+  });
+
+  if (!admin) throw AppError.unauthorized("Only Admin can upadte users role");
+
+  const updatedRole = await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      role: newRole,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      isActive: true,
+    },
+  });
+
+  return updatedRole;
+};
+
 export const adminServices = {
   allUser,
   updateUserStatus,
+  updateUserRole,
 };
