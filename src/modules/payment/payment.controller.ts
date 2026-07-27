@@ -23,6 +23,17 @@ const createPaymentSession = catchAsync(
   },
 );
 
+const handleWebhook = catchAsync(async (req: Request, res: Response) => {
+  const event = req.body as string;
+  const signature = req.headers["stripe-signature"]!;
+  sendRespone(res, {
+    statusCode: 200,
+    success: true,
+    message: "webhook triggered successfully",
+  });
+});
+
 export const paymentController = {
   createPaymentSession,
+  handleWebhook,
 };

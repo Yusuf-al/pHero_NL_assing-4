@@ -18,8 +18,60 @@ import { sendRespone } from "./utils/sendResponse";
 import httpStatus from "http-status";
 import { globalErrorHandler } from "./middleware/globalErrorHandler";
 import paymentRoute from "./modules/payment/payment.route";
+import config from "./config";
+import { stripe } from "./lib/stripe";
 
 const app: Application = express();
+const endpointSecret = config.stripe_webhook_secret;
+
+// app.post(
+//   "/api/payment/webhook",
+//   express.raw({ type: "application/json" }),
+//   (req: Request, res: Response) => {
+//     let event = req.body;
+
+//     console.log(event, "body");
+//     console.log(req.headers, "headers");
+
+//     if (endpointSecret) {
+//       const signature = req.headers["stripe-signature"]!;
+
+//       try {
+//         event = stripe.webhooks.constructEvent(
+//           req.body,
+//           signature,
+//           endpointSecret,
+//         );
+//       } catch (error: any) {
+//         console.log(`⚠️ Webhook signature verification failed.`, error.message);
+//         return response.sendStatus(400);
+//       }
+//     }
+
+//     console.log("event after try", event);
+
+//     // Handle the event
+//     switch (event.type) {
+//       case "payment_intent.succeeded":
+//         const paymentIntent = event.data.object;
+//         // Then define and call a method to handle the successful payment intent.
+//         // handlePaymentIntentSucceeded(paymentIntent);
+//         break;
+//       case "payment_method.attached":
+//         const paymentMethod = event.data.object;
+//         // Then define and call a method to handle the successful attachment of a PaymentMethod.
+//         // handlePaymentMethodAttached(paymentMethod);
+//         break;
+//       // ... handle other event types
+//       default:
+//         console.log(`Unhandled event type ${event.type}`);
+//     }
+
+//     response.json({ received: true });
+//   },
+// );
+
+app.use("/api/payment/webhook", express.raw({ type: "application/json" }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

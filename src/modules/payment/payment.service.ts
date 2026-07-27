@@ -3,6 +3,7 @@ import { prisma } from "../../lib/prisma";
 import { stripe } from "../../lib/stripe"; // adjust to your actual stripe client import path
 import config from "../../config";
 import AppError from "../../errors/AppError";
+import { Stripe } from "stripe";
 
 const paymentSession = async (userId: string, rentRequestId: string) => {
   const user = await prisma.user.findUniqueOrThrow({
@@ -11,10 +12,6 @@ const paymentSession = async (userId: string, rentRequestId: string) => {
     },
   });
 
-  // Fetch by `id` only — Prisma's `findUniqueOrThrow` where clause must
-  // match an actual unique constraint. Combining `id` with `isPaid`/`status`
-  // (neither of which is unique) would throw a Prisma validation error
-  // instead of a clean "not found"/"not eligible" message.
   const rentalRequest = await prisma.rentalRequest.findUniqueOrThrow({
     where: {
       id: rentRequestId,
@@ -89,8 +86,40 @@ const paymentSession = async (userId: string, rentRequestId: string) => {
   return session.url;
 };
 
+const handlePaymentWebhook = async (payload: Buffer, signature: string) => {
+  const endpointSecret = config.stripe_webhook_secret;
+
+  const event: Stripe.Event = stripe.webhooks.constructEvent(
+    payload,
+    signature,
+    endpointSecret,
+  );
+  // Handle the event
+  switch (event.type) {
+    case "checkout.session.completed":
+      const session = event.data.object as Stripe.Checkout.Session;
+
+      const rentalRequestId = session.metadata?.rentalRequestId;
+      if (!rentalRequestId) {
+        console.error(
+          `checkout.session.completed missing rentalRequestId metadata. session id: ${session.id}`,
+        );
+      }
+      break;
+    case "payment_method.attached":
+      const paymentMethod = event.data.object;
+      // Then define and call a method to handle the successful attachment of a PaymentMethod.
+      // handlePaymentMethodAttached(paymentMethod);
+      break;
+    // ... handle other event types
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+};
+
 export const paymentServices = {
   paymentSession,
+  handlePaymentWebhook,
 };
 
 // import { RequestStatus } from "../../../generated/prisma/client";
