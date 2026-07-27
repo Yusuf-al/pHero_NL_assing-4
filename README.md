@@ -111,5 +111,9 @@ app.use("/api/payment", paymentRoute);
 | **Landlord** | Everything a Tenant can (profile-wise), manage own properties, view/update rental requests on own properties, make payments |
 | **Admin** | Full access — manage all properties, users, rental requests, and user roles/status |
 
+## ER Diagram<img width="1536" height="1024" alt="ChatGPT Image Jul 27, 2026, 11_24_40 PM" src="https://github.com/user-attachments/assets/42a37cb2-af14-4888-83ab-8583f4be379d" />
+
+
+          
 ## Notes
 - `POST /api/payment/webhook` is called by the payment gateway, not by client apps — exclude it from auth middleware.
