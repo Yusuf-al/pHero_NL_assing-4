@@ -24,8 +24,14 @@ const createPaymentSession = catchAsync(
 );
 
 const handleWebhook = catchAsync(async (req: Request, res: Response) => {
-  const event = req.body as string;
+  const event = req.body;
   const signature = req.headers["stripe-signature"]!;
+
+  await paymentServices.handlePaymentWebhook(
+    event as Buffer,
+    signature as string,
+  );
+
   sendRespone(res, {
     statusCode: 200,
     success: true,

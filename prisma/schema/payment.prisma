@@ -5,7 +5,7 @@ model Payment {
 
   status          PaymentStatus   @default(PENDING)
 
-  paymentMethod   PaymentMethod?
+  paymentMethod   PaymentMethod? 
 
   transactionId   String?         @unique
 

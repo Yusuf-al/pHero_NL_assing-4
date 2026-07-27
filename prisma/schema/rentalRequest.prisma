@@ -26,7 +26,5 @@ model RentalRequest {
   updatedAt     DateTime @updatedAt
 
 
-  @@unique([tenantId, propertyId])
-
   @@map("rental_requests")
 }

@@ -11,4 +11,6 @@ paymentRoute.post(
   paymentController.createPaymentSession,
 );
 
+paymentRoute.post("/webhook", paymentController.handleWebhook);
+
 export default paymentRoute;

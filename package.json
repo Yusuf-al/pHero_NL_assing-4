@@ -4,6 +4,7 @@
   "type": "module",
   "main": "server.ts",
   "scripts": {
+    "postinstall": "prisma generate",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsup",
     "dev": "tsx watch src/server.ts",

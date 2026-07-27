@@ -18,7 +18,6 @@ const createUserIntoDB = catchAsync(async (req: Request, res: Response) => {
 const getMyProfile = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const userData = req.user;
-    console.log(req.user);
 
     if (!userData) throw AppError.notFound("User not found ");
 

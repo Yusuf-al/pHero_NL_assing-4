@@ -179,6 +179,15 @@ const allRentalRequest = async (query: IRentalRequestQuery) => {
             phone: true,
           },
         },
+        payments: {
+          select: {
+            id: true,
+            transactionId: true,
+            paymentDate: true,
+            amount: true,
+            status: true,
+          },
+        },
       },
       skip,
       take: limit,
