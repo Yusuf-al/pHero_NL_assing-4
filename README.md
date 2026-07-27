@@ -8,6 +8,14 @@ Backend REST API for a rental property platform supporting **Tenants**, **Landlo
 [https://backend-project-assignment-main.vercel.app/]
 ```
 
+## Credentials
+ADMIN - admin@example.com
+PASSWORD - '123456'
+LANDLORD - abc2@example.com
+PASSWORD - '123456'
+TENANT - abc@exaple.com
+PASSWORD - '123456'
+
 ## Authentication
 
 Protected routes require a JWT sent in the `Authorization` header:
