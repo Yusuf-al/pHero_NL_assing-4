@@ -3,25 +3,35 @@
 Backend REST API for a rental property platform supporting **Tenants**, **Landlords**, and **Admins** — property listings, rental requests, reviews, and payments.
 
 ## Base URL
+https://backend-project-assignment-main.vercel.app/
 
 ```
-[https://backend-project-assignment-main.vercel.app/]
+https://backend-project-assignment-main.vercel.app/
 ```
 
 ## Credentials
 ADMIN - admin@example.com
-PASSWORD - '123456'
+
+PASSWORD - "123456"
+
 LANDLORD - abc2@example.com
-PASSWORD - '123456'
+
+PASSWORD - "123456"
+
 TENANT - abc@exaple.com
-PASSWORD - '123456'
+
+PASSWORD - "123456"
+
+```
+password should in string format
+```
 
 ## Authentication
 
-Protected routes require a JWT sent in the `Authorization` header:
+Protected routes require a JWT sent in the `Cookies` header:
 
 ```
-Authorization: Cookies
+Cookies
 ```
 
 Roles: `ADMIN`, `LANDLORD`, `TENANT`
